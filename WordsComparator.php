@@ -4,6 +4,10 @@ class WordsComparator
 {
     const ENCODING = 'utf-8';
 
+    const RELATION_TYPE_ABSORBING = 2;
+    const RELATION_TYPE_CROSSING = 1;
+    const RELATION_TYPE_INDEPENDENCE = 0;
+
     public static function compare($firstString='', $secondString='', $simpleView=False)
     {
         // Здесь будем хранить результат сравнения
@@ -95,7 +99,44 @@ class WordsComparator
 
     private static function getRelationsOfVectors($orderedVector, $vector)
     {
-        
+        $firstRelations = self::getRelationsOfVectorsByAxis(
+            $orderedVector['first_start'],
+            $orderedVector['first_end'],
+            $vector['first_start'],
+            $vector['first_end']
+        );
+
+        $secondRelations = self::getRelationsOfVectorsByAxis(
+            $orderedVector['second_start'],
+            $orderedVector['second_end'],
+            $vector['second_start'],
+            $vector['second_end']
+        );
+
+        return ($firstRelations['type'] > $secondRelations['type']) ? $firstRelations : $secondRelations;
+    }
+
+    private static function getRelationsOfVectorsByAxis($orderedVectorStart, $orderedVectorEnd, $vectorStart, $vectorEnd)
+    {
+        $relations = [
+            'type' => self::RELATION_TYPE_INDEPENDENCE,
+            'cut_from_left' => 0,
+            'cut_from_right' => 0
+        ];
+
+        if ($orderedVectorStart <= $vectorStart && $orderedVectorEnd >= $vectorEnd) {
+            $relations['type'] = self::RELATION_TYPE_ABSORBING;
+        }
+        elseif ($orderedVectorStart > $vectorStart && $orderedVectorEnd >= $vectorEnd) {
+            $relations['type'] = self::RELATION_TYPE_CROSSING;
+            $relations['cut_from_right'] = $vectorEnd - $orderedVectorStart + 1;
+        }
+        elseif ($orderedVectorStart <= $vectorStart && $orderedVectorEnd < $vectorEnd) {
+            $relations['type'] = self::RELATION_TYPE_CROSSING;
+            $relations['cut_from_left'] = $orderedVectorEnd - $vectorStart + 1;
+        }
+
+        return $relations;
     }
     
     // test function (delete after the end of developing)
