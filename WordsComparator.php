@@ -42,17 +42,17 @@ class WordsComparator
                 if (array_key_exists($previousKey, $vectors)) {
                     $vector = $vectors[$previousKey];
                     unset($vectors[$previousKey]);
-                    $vector['end_first'] = $firstIndex;
-                    $vector['end_second'] = $secondIndex;
+                    $vector['first_end'] = $firstIndex;
+                    $vector['second_end'] = $secondIndex;
                     $vector['length']++;
                     $vectors[$newKey] = $vector;
                 }
                 else {
                     $vectors[$newKey] = [
-                        'start_first' => $firstIndex,
-                        'start_second' => $secondIndex,
-                        'end_first' => $firstIndex,
-                        'end_second' => $secondIndex,
+                        'first_start' => $firstIndex,
+                        'first_end' => $firstIndex,
+                        'second_start' => $secondIndex,
+                        'second_end' => $secondIndex,
                         'length' => 1
                     ];
                 }
@@ -93,6 +93,11 @@ class WordsComparator
         return $orderedVectors;
     }
 
+    private static function getRelationsOfVectors($orderedVector, $vector)
+    {
+        
+    }
+    
     // test function (delete after the end of developing)
     private static function showVectors($firstString, $secondString)
     {

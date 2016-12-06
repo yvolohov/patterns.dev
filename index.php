@@ -2,4 +2,6 @@
 
 require_once 'WordsComparator.php';
 
-WordsComparator::compare('information', 'generation');
+// 'abcea', 'eabc'
+// 'aaabaaa', 'aabaaaa'
+WordsComparator::compare('aaaaaaa', 'aaaaaaa'); // пересечение по обеим осям
