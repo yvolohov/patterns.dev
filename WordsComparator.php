@@ -113,7 +113,16 @@ class WordsComparator
             $vector['second_end']
         );
 
-        return ($firstRelations['type'] > $secondRelations['type']) ? $firstRelations : $secondRelations;
+        $firstType = $firstRelations['type'];
+        $secondType = $secondRelations['type'];
+        $cutFromLeft = ($firstType >= $secondType) ? $firstRelations['cut_from_left'] : $secondRelations['cut_from_left'];
+        $cutFromRight = ($firstType >= $secondType) ? $firstRelations['cut_from_right'] : $secondRelations['cut_from_right'];
+
+        return [
+            'type' => max($firstType, $secondType),
+            'cut_from_left' => $cutFromLeft,
+            'cut_from_right' => $cutFromRight
+        ];
     }
 
     private static function getRelationsOfVectorsByAxis($orderedVectorStart, $orderedVectorEnd, $vectorStart, $vectorEnd)
