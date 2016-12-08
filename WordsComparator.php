@@ -1,5 +1,7 @@
 <?php
 
+require_once 'WordsComparatorTester.php';
+
 class WordsComparator
 {
     const ENCODING = 'utf-8';
@@ -20,9 +22,7 @@ class WordsComparator
         $orderedVectors = self::orderCompetingVectors($allVectors);
 
         // Показываем поле сравнения
-        self::showVectors($firstString, $secondString);
-
-        //print_r($orderedVectors);
+        WordsComparatorTester::test($firstString, $secondString, $orderedVectors);
     }
 
     private static function getVectors($firstString, $secondString)
@@ -70,7 +70,7 @@ class WordsComparator
 
     private static function orderCompetingVectors($vectors)
     {
-        // Сортируем векторы по убыванию их длины (поле 'length')
+        /* Сортируем векторы по убыванию их длины (поле 'length') */
         $sorter = function($a, $b) {return $b['length'] - $a['length'];};
         usort($vectors, $sorter);
 
@@ -81,22 +81,19 @@ class WordsComparator
             $forcedOut = false;
             $orderedVectorsCount = count($orderedVectors);
 
-            // Проверка вектора на вытеснение более сильными векторами
+            /* Проверка вектора на вытеснение более сильными (длинными) векторами */
             for ($orderedVectorsIndex = 0; $orderedVectorsIndex < $orderedVectorsCount; $orderedVectorsIndex++) {
                 $relations = self::getRelationsOfVectors($orderedVectors[$orderedVectorsIndex], $vectors[$vectorsIndex]);
 
-                print_r($relations) . PHP_EOL;
-
-                /* orderedVector полностью перекрывает vector, последний вытесняется */
+                /* $orderedVector полностью перекрывает $vector, последний вытесняется */
                 if ($relations['type'] == self::RELATION_TYPE_ABSORBING) {
                     $forcedOut = true;
                 }
 
-                /* orderedVector и vector частично пересекаются, поэтому перекрытую
-                 * часть vector нужно обрезать */
-                elseif ($relations['type'] = self::RELATION_TYPE_CROSSING) {
+                /* $orderedVector и $vector частично пересекаются, поэтому перекрытую
+                 * часть $vector нужно обрезать */
+                elseif ($relations['type'] == self::RELATION_TYPE_CROSSING) {
 
-                    /*
                     if ($relations['cut_from_left'] > 0) {
                         $vectors[$vectorsIndex]['first_start'] += $relations['cut_from_left'];
                         $vectors[$vectorsIndex]['second_start'] += $relations['cut_from_left'];
@@ -107,21 +104,22 @@ class WordsComparator
                         $vectors[$vectorsIndex]['second_end'] -= $relations['cut_from_right'];
                         $vectors[$vectorsIndex]['length'] -= $relations['cut_from_right'];
                     }
-                    */
 
-                    /* после обрезки vector нужно заново отсортировать vectors по длине
+                    /* после обрезки $vector нужно заново отсортировать $vectors по длине
                      * и сдвинуть счетчик назад, чтобы заново пройти данный виток цикла */
-                    //usort($vectors, $sorter);
-                    //$vectorsIndex--;
-                    //$forcedOut = true;
+                    usort($vectors, $sorter);
+                    $vectorsIndex--;
+                    $forcedOut = true;
                 }
+
+                /* если векторы не пересекаются, флаг $forcedOut не будет установлен,
+                 * continue не выполнится и текущий вектор будет добавлен в $orderedVectors */
             }
 
             if ($forcedOut) {
                 continue;
             }
 
-            // Добавление вектора в упорядоченные
             $orderedVectors[] = $vectors[$vectorsIndex];
         }
 
@@ -144,11 +142,7 @@ class WordsComparator
             $vector['second_end']
         );
 
-        return [
-            'type' => max($firstRelations['type'], $secondRelations['type']),
-            'cut_from_left' => max($firstRelations['cut_from_left'], $secondRelations['cut_from_left']),
-            'cut_from_right' => max($firstRelations['cut_from_right'], $secondRelations['cut_from_right'])
-        ];
+        return ($firstRelations['type'] > $secondRelations['type']) ? $firstRelations : $secondRelations;
     }
 
     private static function getRelationsOfVectorsByAxis($orderedVectorStart, $orderedVectorEnd, $vectorStart, $vectorEnd)
@@ -159,37 +153,25 @@ class WordsComparator
             'cut_from_right' => 0
         ];
 
-        if ($orderedVectorStart <= $vectorStart && $orderedVectorEnd >= $vectorEnd) {
+        $pointIsInside = function($firstPoint, $secondPoint, $testPoint) {
+            return ($testPoint >= $firstPoint && $testPoint <= $secondPoint);
+        };
+
+        $vectorStartIsInside = $pointIsInside($orderedVectorStart, $orderedVectorEnd, $vectorStart);
+        $vectorEndIsInside = $pointIsInside($orderedVectorStart, $orderedVectorEnd, $vectorEnd);
+
+        if ($vectorStartIsInside && $vectorEndIsInside) {
             $relations['type'] = self::RELATION_TYPE_ABSORBING;
         }
-        elseif ($orderedVectorStart > $vectorStart && $orderedVectorEnd >= $vectorEnd) {
-            $relations['type'] = self::RELATION_TYPE_CROSSING;
-            $relations['cut_from_right'] = $vectorEnd - $orderedVectorStart + 1;
-        }
-        elseif ($orderedVectorStart <= $vectorStart && $orderedVectorEnd < $vectorEnd) {
+        elseif ($vectorStartIsInside) {
             $relations['type'] = self::RELATION_TYPE_CROSSING;
             $relations['cut_from_left'] = $orderedVectorEnd - $vectorStart + 1;
         }
+        elseif ($vectorEndIsInside) {
+            $relations['type'] = self::RELATION_TYPE_CROSSING;
+            $relations['cut_from_right'] = $vectorEnd - $orderedVectorStart + 1;
+        }
 
         return $relations;
-    }
-    
-    // test function (delete after the end of developing)
-    private static function showVectors($firstString, $secondString)
-    {
-        echo '------------------' . PHP_EOL;
-        $firstLength = mb_strlen($firstString, self::ENCODING);
-        $secondLength = mb_strlen($secondString, self::ENCODING);
-
-        for ($firstIndex = 0; $firstIndex < $firstLength; $firstIndex++) {
-            $firstStringSymbol = $firstString{$firstIndex};
-            $row = '';
-
-            for ($secondIndex = 0; $secondIndex < $secondLength; $secondIndex++) {
-                $secondStringSymbol = $secondString{$secondIndex};
-                $row .= ($firstStringSymbol === $secondStringSymbol) ? '[' . $firstStringSymbol . ']' : '[.]';
-            }
-            echo $row . PHP_EOL;
-        }
     }
 }
