@@ -76,14 +76,31 @@ class WordsComparator
         $vectorsCount = count($vectors);
 
         for ($vectorsIndex = 0; $vectorsIndex < $vectorsCount; $vectorsIndex++) {
-            $currentVector = $vectors[$vectorsIndex];
+            $vector = $vectors[$vectorsIndex];
             $forcedOut = false;
             $orderedVectorsCount = count($orderedVectors);
 
             // Проверка вектора на вытеснение более сильными векторами
             for ($orderedVectorsIndex = 0; $orderedVectorsIndex < $orderedVectorsCount; $orderedVectorsIndex++) {
                 $orderedVector = $orderedVectors[$orderedVectorsIndex];
+                $relations = self::getRelationsOfVectors($orderedVector, $vector);
 
+                if ($relations['type'] == self::RELATION_TYPE_ABSORBING) {
+                    $forcedOut = true;
+                }
+                elseif ($relations['type'] = self::RELATION_TYPE_CROSSING) {
+
+                    if ($relations['cut_from_left']) {
+
+                    }
+
+                    if ($relations['cut_from_right']) {
+
+                    }
+                }
+                else {
+
+                }
             }
 
             if ($forcedOut) {
@@ -91,7 +108,7 @@ class WordsComparator
             }
 
             // Добавление вектора в упорядоченные
-            $orderedVectors[] = $currentVector;
+            $orderedVectors[] = $vector;
         }
 
         return $orderedVectors;
@@ -113,15 +130,10 @@ class WordsComparator
             $vector['second_end']
         );
 
-        $firstType = $firstRelations['type'];
-        $secondType = $secondRelations['type'];
-        $cutFromLeft = ($firstType >= $secondType) ? $firstRelations['cut_from_left'] : $secondRelations['cut_from_left'];
-        $cutFromRight = ($firstType >= $secondType) ? $firstRelations['cut_from_right'] : $secondRelations['cut_from_right'];
-
         return [
-            'type' => max($firstType, $secondType),
-            'cut_from_left' => $cutFromLeft,
-            'cut_from_right' => $cutFromRight
+            'type' => max($firstRelations['type'], $secondRelations['type']),
+            'cut_from_left' => max($firstRelations['cut_from_left'], $secondRelations['cut_from_left']),
+            'cut_from_right' => max($firstRelations['cut_from_right'], $secondRelations['cut_from_right'])
         ];
     }
 
