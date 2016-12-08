@@ -21,6 +21,8 @@ class WordsComparator
 
         // Показываем поле сравнения
         self::showVectors($firstString, $secondString);
+
+        //print_r($orderedVectors);
     }
 
     private static function getVectors($firstString, $secondString)
@@ -76,30 +78,42 @@ class WordsComparator
         $vectorsCount = count($vectors);
 
         for ($vectorsIndex = 0; $vectorsIndex < $vectorsCount; $vectorsIndex++) {
-            $vector = $vectors[$vectorsIndex];
             $forcedOut = false;
             $orderedVectorsCount = count($orderedVectors);
 
             // Проверка вектора на вытеснение более сильными векторами
             for ($orderedVectorsIndex = 0; $orderedVectorsIndex < $orderedVectorsCount; $orderedVectorsIndex++) {
-                $orderedVector = $orderedVectors[$orderedVectorsIndex];
-                $relations = self::getRelationsOfVectors($orderedVector, $vector);
+                $relations = self::getRelationsOfVectors($orderedVectors[$orderedVectorsIndex], $vectors[$vectorsIndex]);
 
+                print_r($relations) . PHP_EOL;
+
+                /* orderedVector полностью перекрывает vector, последний вытесняется */
                 if ($relations['type'] == self::RELATION_TYPE_ABSORBING) {
                     $forcedOut = true;
                 }
+
+                /* orderedVector и vector частично пересекаются, поэтому перекрытую
+                 * часть vector нужно обрезать */
                 elseif ($relations['type'] = self::RELATION_TYPE_CROSSING) {
 
-                    if ($relations['cut_from_left']) {
-
+                    /*
+                    if ($relations['cut_from_left'] > 0) {
+                        $vectors[$vectorsIndex]['first_start'] += $relations['cut_from_left'];
+                        $vectors[$vectorsIndex]['second_start'] += $relations['cut_from_left'];
+                        $vectors[$vectorsIndex]['length'] -= $relations['cut_from_left'];
                     }
-
-                    if ($relations['cut_from_right']) {
-
+                    elseif ($relations['cut_from_right'] > 0) {
+                        $vectors[$vectorsIndex]['first_end'] -= $relations['cut_from_right'];
+                        $vectors[$vectorsIndex]['second_end'] -= $relations['cut_from_right'];
+                        $vectors[$vectorsIndex]['length'] -= $relations['cut_from_right'];
                     }
-                }
-                else {
+                    */
 
+                    /* после обрезки vector нужно заново отсортировать vectors по длине
+                     * и сдвинуть счетчик назад, чтобы заново пройти данный виток цикла */
+                    //usort($vectors, $sorter);
+                    //$vectorsIndex--;
+                    //$forcedOut = true;
                 }
             }
 
@@ -108,7 +122,7 @@ class WordsComparator
             }
 
             // Добавление вектора в упорядоченные
-            $orderedVectors[] = $vector;
+            $orderedVectors[] = $vectors[$vectorsIndex];
         }
 
         return $orderedVectors;
