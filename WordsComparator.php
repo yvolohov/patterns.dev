@@ -21,8 +21,20 @@ class WordsComparator
         // Пропускаем векторы через процедуру конкуренции
         $orderedVectors = self::orderCompetingVectors($allVectors);
 
-        // Показываем поле сравнения
+        // Сортируем упорядоченные векторы в порядке их расположения
+        $sorter = function($a, $b) {return $a['first_start'] - $b['first_start'];};
+        usort($orderedVectors, $sorter);
+
+        $previousVector = $currentVector = Null;
+        $maximalValue = count($orderedVectors) + 1;
+
+        for ($counter = 1; $counter <= $maximalValue; $counter++) {
+
+        }
+        
+        // Тестируем
         WordsComparatorTester::test($firstString, $secondString, $orderedVectors);
+        print_r($orderedVectors) . PHP_EOL;
     }
 
     private static function getVectors($firstString, $secondString)
