@@ -64,8 +64,8 @@ class WordsComparatorTester
 
         foreach ($orderedVectors as $orderedVector) {
 
-            for ($firstIndex = $orderedVector['first_start'], $secondIndex = $orderedVector['second_start'];
-                 $firstIndex <= $orderedVector['first_end'] || $secondIndex <= $orderedVector['second_end'];
+            for ($firstIndex = $orderedVector['y_start'], $secondIndex = $orderedVector['x_start'];
+                 $firstIndex <= $orderedVector['y_end'] || $secondIndex <= $orderedVector['x_end'];
                  $firstIndex++, $secondIndex++) {
                 $orderedMatrix[$firstIndex][$secondIndex] = $fullMatrix[$firstIndex][$secondIndex];
             }

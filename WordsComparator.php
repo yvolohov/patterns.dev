@@ -19,7 +19,7 @@ class WordsComparator
         $orderedVectors = self::orderCompetingVectors($allVectors);
 
         // Сортируем упорядоченные векторы в порядке их расположения
-        $sorter = function($a, $b) {return $a['first_start'] - $b['first_start'];};
+        $sorter = function($a, $b) {return $a['y_start'] - $b['y_start'];};
         usort($orderedVectors, $sorter);
 
         // Тестируем
@@ -48,7 +48,7 @@ class WordsComparator
             $result .= $spaceBetweenVectors;
 
             if ($counter < $maximalValue) {
-                $result .= substr($firstString, $currentVector['first_start'], $currentVector['length']);
+                $result .= substr($firstString, $currentVector['y_start'], $currentVector['length']);
             }
         }
 
@@ -84,17 +84,17 @@ class WordsComparator
                 if (array_key_exists($previousKey, $vectors)) {
                     $vector = $vectors[$previousKey];
                     unset($vectors[$previousKey]);
-                    $vector['first_end'] = $firstIndex;
-                    $vector['second_end'] = $secondIndex;
+                    $vector['y_end'] = $firstIndex;
+                    $vector['x_end'] = $secondIndex;
                     $vector['length']++;
                     $vectors[$newKey] = $vector;
                 }
                 else {
                     $vectors[$newKey] = [
-                        'first_start' => $firstIndex,
-                        'first_end' => $firstIndex,
-                        'second_start' => $secondIndex,
-                        'second_end' => $secondIndex,
+                        'y_start' => $firstIndex,
+                        'y_end' => $firstIndex,
+                        'x_start' => $secondIndex,
+                        'x_end' => $secondIndex,
                         'length' => 1
                     ];
                 }
@@ -131,13 +131,13 @@ class WordsComparator
                 elseif ($relations['type'] == self::RELATION_TYPE_CROSSING) {
 
                     if ($relations['cut_from_left'] > 0) {
-                        $vectors[$vectorsIndex]['first_start'] += $relations['cut_from_left'];
-                        $vectors[$vectorsIndex]['second_start'] += $relations['cut_from_left'];
+                        $vectors[$vectorsIndex]['y_start'] += $relations['cut_from_left'];
+                        $vectors[$vectorsIndex]['x_start'] += $relations['cut_from_left'];
                         $vectors[$vectorsIndex]['length'] -= $relations['cut_from_left'];
                     }
                     elseif ($relations['cut_from_right'] > 0) {
-                        $vectors[$vectorsIndex]['first_end'] -= $relations['cut_from_right'];
-                        $vectors[$vectorsIndex]['second_end'] -= $relations['cut_from_right'];
+                        $vectors[$vectorsIndex]['y_end'] -= $relations['cut_from_right'];
+                        $vectors[$vectorsIndex]['x_end'] -= $relations['cut_from_right'];
                         $vectors[$vectorsIndex]['length'] -= $relations['cut_from_right'];
                     }
 
@@ -148,8 +148,11 @@ class WordsComparator
                     $forcedOut = true;
                 }
 
-                /* если векторы не пересекаются, флаг $forcedOut не будет установлен,
-                 * continue не выполнится и текущий вектор будет добавлен в $orderedVectors */
+                /* если нет ни поглощения ни пересечения, вектор может быть добавлен в упорядоченные */
+                else {
+                    
+
+                }
             }
 
             if ($forcedOut) {
@@ -165,17 +168,17 @@ class WordsComparator
     private static function getRelationsOfVectors($orderedVector, $vector)
     {
         $firstRelations = self::getRelationsOfVectorsByAxis(
-            $orderedVector['first_start'],
-            $orderedVector['first_end'],
-            $vector['first_start'],
-            $vector['first_end']
+            $orderedVector['y_start'],
+            $orderedVector['y_end'],
+            $vector['y_start'],
+            $vector['y_end']
         );
 
         $secondRelations = self::getRelationsOfVectorsByAxis(
-            $orderedVector['second_start'],
-            $orderedVector['second_end'],
-            $vector['second_start'],
-            $vector['second_end']
+            $orderedVector['x_start'],
+            $orderedVector['x_end'],
+            $vector['x_start'],
+            $vector['x_end']
         );
 
         return ($firstRelations['type'] > $secondRelations['type']) ? $firstRelations : $secondRelations;
