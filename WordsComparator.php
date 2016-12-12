@@ -12,9 +12,6 @@ class WordsComparator
 
     public static function compare($firstString='', $secondString='', $simpleView=False)
     {
-        // Здесь будем хранить результат сравнения
-        $result = '';
-
         // Собираем векторы из точек пересечения
         $allVectors = self::getVectors($firstString, $secondString);
 
@@ -25,16 +22,43 @@ class WordsComparator
         $sorter = function($a, $b) {return $a['first_start'] - $b['first_start'];};
         usort($orderedVectors, $sorter);
 
+        // Тестируем
+        WordsComparatorTester::test($firstString, $secondString, $orderedVectors);
+
+        // Строим и возвращаем шаблон
+        return self::buildTemplate($firstString, $secondString, $orderedVectors, $simpleView);
+    }
+
+    private static function buildTemplate($firstString, $secondString, $orderedVectors, $simpleView)
+    {
+        $result = '';
         $previousVector = $currentVector = Null;
         $maximalValue = count($orderedVectors) + 1;
 
         for ($counter = 1; $counter <= $maximalValue; $counter++) {
+            $previousVector = $currentVector;
+            $currentVector = ($counter < $maximalValue) ? $orderedVectors[$counter - 1] : Null;
+            $spaceBetweenVectors = self::getSpaceBetweenVectors(
+                $firstString,
+                $secondString,
+                $previousVector,
+                $currentVector,
+                $simpleView
+            );
+            $result .= $spaceBetweenVectors;
 
+            if ($counter < $maximalValue) {
+                $result .= substr($firstString, $currentVector['first_start'], $currentVector['length']);
+            }
         }
-        
-        // Тестируем
-        WordsComparatorTester::test($firstString, $secondString, $orderedVectors);
-        print_r($orderedVectors) . PHP_EOL;
+
+        return $result;
+    }
+
+    private static function getSpaceBetweenVectors($firstString, $secondString, $previousVector,
+                                                   $currentVector, $simpleView)
+    {
+        return ' ';
     }
 
     private static function getVectors($firstString, $secondString)
@@ -157,7 +181,8 @@ class WordsComparator
         return ($firstRelations['type'] > $secondRelations['type']) ? $firstRelations : $secondRelations;
     }
 
-    private static function getRelationsOfVectorsByAxis($orderedVectorStart, $orderedVectorEnd, $vectorStart, $vectorEnd)
+    private static function getRelationsOfVectorsByAxis($orderedVectorStart, $orderedVectorEnd,
+                                                        $vectorStart, $vectorEnd)
     {
         $relations = [
             'type' => self::RELATION_TYPE_INDEPENDENCE,
