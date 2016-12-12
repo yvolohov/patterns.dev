@@ -4,9 +4,9 @@ class WordsComparatorTester
 {
     const ENCODING = 'utf-8';
 
-    public static function test($firstString, $secondString, $orderedVectors)
+    public static function test($xString, $yString, $orderedVectors)
     {
-        $fullMatrix = self::getFullMatrix($firstString, $secondString);
+        $fullMatrix = self::getFullMatrix($yString, $xString);
         $orderedMatrix = self::getOrderedMatrix($fullMatrix, $orderedVectors);
 
         self::showVectorsMatrix($fullMatrix);
@@ -15,14 +15,14 @@ class WordsComparatorTester
 
     private static function showVectorsMatrix($matrix)
     {
-        $firstLength = count($matrix);
+        $yLength = count($matrix);
 
-        for ($firstIndex = 0; $firstIndex < $firstLength; $firstIndex++) {
-            $secondLength = count($matrix[$firstIndex]);
+        for ($yIndex = 0; $yIndex < $yLength; $yIndex++) {
+            $xLength = count($matrix[$yIndex]);
             $row = '';
 
-            for ($secondIndex = 0; $secondIndex < $secondLength; $secondIndex++) {
-                $cell = $matrix[$firstIndex][$secondIndex];
+            for ($xIndex = 0; $xIndex < $xLength; $xIndex++) {
+                $cell = $matrix[$yIndex][$xIndex];
                 $row .= (!empty($cell)) ? ' ' . $cell . ' ' : '[ ]';
             }
 
@@ -31,19 +31,19 @@ class WordsComparatorTester
         echo '----------------------' . PHP_EOL;
     }
 
-    private static function getFullMatrix($firstString, $secondString)
+    private static function getFullMatrix($yString, $xString)
     {
         $matrix = [];
-        $firstLength = mb_strlen($firstString, self::ENCODING);
-        $secondLength = mb_strlen($secondString, self::ENCODING);
+        $yLength = mb_strlen($yString, self::ENCODING);
+        $xLength = mb_strlen($xString, self::ENCODING);
 
-        for ($firstIndex = 0; $firstIndex < $firstLength; $firstIndex++) {
-            $firstStringSymbol = $firstString{$firstIndex};
+        for ($yIndex = 0; $yIndex < $yLength; $yIndex++) {
+            $yStringSymbol = $yString{$yIndex};
 
-            for ($secondIndex = 0; $secondIndex < $secondLength; $secondIndex++) {
-                $secondStringSymbol = $secondString{$secondIndex};
-                $matrix[$firstIndex][$secondIndex] = ($firstStringSymbol === $secondStringSymbol)
-                    ? $firstStringSymbol : '';
+            for ($xIndex = 0; $xIndex < $xLength; $xIndex++) {
+                $xStringSymbol = $xString{$xIndex};
+                $matrix[$yIndex][$xIndex] = ($yStringSymbol === $xStringSymbol)
+                    ? $yStringSymbol : '';
             }
         }
         return $matrix;
@@ -52,22 +52,22 @@ class WordsComparatorTester
     private static function getOrderedMatrix($fullMatrix, $orderedVectors)
     {
         $orderedMatrix = [];
-        $firstLength = count($fullMatrix);
+        $yLength = count($fullMatrix);
 
-        for ($firstIndex = 0; $firstIndex < $firstLength; $firstIndex++) {
-            $secondLength = count($fullMatrix[$firstIndex]);
+        for ($yIndex = 0; $yIndex < $yLength; $yIndex++) {
+            $xLength = count($fullMatrix[$yIndex]);
 
-            for ($secondIndex = 0; $secondIndex < $secondLength; $secondIndex++) {
-                $orderedMatrix [$firstIndex][$secondIndex] = '';
+            for ($xIndex = 0; $xIndex < $xLength; $xIndex++) {
+                $orderedMatrix [$yIndex][$xIndex] = '';
             }
         }
 
         foreach ($orderedVectors as $orderedVector) {
 
-            for ($firstIndex = $orderedVector['y_start'], $secondIndex = $orderedVector['x_start'];
-                 $firstIndex <= $orderedVector['y_end'] || $secondIndex <= $orderedVector['x_end'];
-                 $firstIndex++, $secondIndex++) {
-                $orderedMatrix[$firstIndex][$secondIndex] = $fullMatrix[$firstIndex][$secondIndex];
+            for ($yIndex = $orderedVector['y_start'], $xIndex = $orderedVector['x_start'];
+                 $yIndex <= $orderedVector['y_end'] || $xIndex <= $orderedVector['x_end'];
+                 $yIndex++, $xIndex++) {
+                $orderedMatrix[$yIndex][$xIndex] = $fullMatrix[$yIndex][$xIndex];
             }
         }
         return $orderedMatrix;

@@ -10,10 +10,10 @@ class WordsComparator
     const RELATION_TYPE_CROSSING = 1;
     const RELATION_TYPE_INDEPENDENCE = 0;
 
-    public static function compare($firstString='', $secondString='', $simpleView=False)
+    public static function compare($xString='', $yString='', $simpleView=False)
     {
         // Собираем векторы из точек пересечения
-        $allVectors = self::getVectors($firstString, $secondString);
+        $allVectors = self::getVectors($yString, $xString);
 
         // Пропускаем векторы через процедуру конкуренции
         $orderedVectors = self::orderCompetingVectors($allVectors);
@@ -23,13 +23,13 @@ class WordsComparator
         usort($orderedVectors, $sorter);
 
         // Тестируем
-        WordsComparatorTester::test($firstString, $secondString, $orderedVectors);
+        WordsComparatorTester::test($xString, $yString, $orderedVectors);
 
         // Строим и возвращаем шаблон
-        return self::buildTemplate($firstString, $secondString, $orderedVectors, $simpleView);
+        return self::buildTemplate($yString, $xString, $orderedVectors, $simpleView);
     }
 
-    private static function buildTemplate($firstString, $secondString, $orderedVectors, $simpleView)
+    private static function buildTemplate($yString, $xString, $orderedVectors, $simpleView)
     {
         $result = '';
         $previousVector = $currentVector = Null;
@@ -39,8 +39,8 @@ class WordsComparator
             $previousVector = $currentVector;
             $currentVector = ($counter < $maximalValue) ? $orderedVectors[$counter - 1] : Null;
             $spaceBetweenVectors = self::getSpaceBetweenVectors(
-                $firstString,
-                $secondString,
+                $yString,
+                $xString,
                 $previousVector,
                 $currentVector,
                 $simpleView
@@ -48,53 +48,53 @@ class WordsComparator
             $result .= $spaceBetweenVectors;
 
             if ($counter < $maximalValue) {
-                $result .= substr($firstString, $currentVector['y_start'], $currentVector['length']);
+                $result .= substr($yString, $currentVector['y_start'], $currentVector['length']);
             }
         }
 
         return $result;
     }
 
-    private static function getSpaceBetweenVectors($firstString, $secondString, $previousVector,
+    private static function getSpaceBetweenVectors($yString, $xString, $previousVector,
                                                    $currentVector, $simpleView)
     {
-        return ' ';
+        return '*';
     }
 
-    private static function getVectors($firstString, $secondString)
+    private static function getVectors($yString, $xString)
     {
-        $firstLength = mb_strlen($firstString, self::ENCODING);
-        $secondLength = mb_strlen($secondString, self::ENCODING);
+        $yLength = mb_strlen($yString, self::ENCODING);
+        $xLength = mb_strlen($xString, self::ENCODING);
         $vectors = [];
 
         // Собираем векторы из точек
-        for ($firstIndex = 0; $firstIndex < $firstLength; $firstIndex++) {
-            $firstStringSymbol = $firstString{$firstIndex};
+        for ($yIndex = 0; $yIndex < $yLength; $yIndex++) {
+            $yStringSymbol = $yString{$yIndex};
 
-            for ($secondIndex = 0; $secondIndex < $secondLength; $secondIndex++) {
-                $secondStringSymbol = $secondString{$secondIndex};
+            for ($xIndex = 0; $xIndex < $xLength; $xIndex++) {
+                $xStringSymbol = $xString{$xIndex};
 
-                if ($firstStringSymbol !== $secondStringSymbol) {
+                if ($yStringSymbol !== $xStringSymbol) {
                     continue;
                 }
 
-                $previousKey = '_' . (string) ($firstIndex - 1) . '_' . (string) ($secondIndex - 1);
-                $newKey = '_' . (string) $firstIndex . '_' . (string) $secondIndex;
+                $previousKey = '_' . (string) ($yIndex - 1) . '_' . (string) ($xIndex - 1);
+                $newKey = '_' . (string) $yIndex . '_' . (string) $xIndex;
 
                 if (array_key_exists($previousKey, $vectors)) {
                     $vector = $vectors[$previousKey];
                     unset($vectors[$previousKey]);
-                    $vector['y_end'] = $firstIndex;
-                    $vector['x_end'] = $secondIndex;
+                    $vector['y_end'] = $yIndex;
+                    $vector['x_end'] = $xIndex;
                     $vector['length']++;
                     $vectors[$newKey] = $vector;
                 }
                 else {
                     $vectors[$newKey] = [
-                        'y_start' => $firstIndex,
-                        'y_end' => $firstIndex,
-                        'x_start' => $secondIndex,
-                        'x_end' => $secondIndex,
+                        'y_start' => $yIndex,
+                        'y_end' => $yIndex,
+                        'x_start' => $xIndex,
+                        'x_end' => $xIndex,
                         'length' => 1
                     ];
                 }
@@ -150,7 +150,19 @@ class WordsComparator
 
                 /* если нет ни поглощения ни пересечения, вектор может быть добавлен в упорядоченные */
                 else {
-                    
+                    $orderedVector = $orderedVectors[$orderedVectorsIndex];
+                    $vector = $vectors[$vectorsIndex];
+
+                    /* но при этом он должен и по оси X и по оси Y находится
+                     * с одной стороны от упорядоченного вектора (т.е. впереди либо сзади) */
+                    if ((($vector['x_start'] > $orderedVector['x_start'])
+                        && ($vector['y_start'] < $orderedVector['y_start']))
+                        || (($vector['x_start'] < $orderedVector['x_start'])
+                        && ($vector['y_start'] > $orderedVector['y_start'])))
+                    {
+                        /* в противном случае вектор вытесняется как неправильный */
+                        $forcedOut = true;
+                    }
 
                 }
             }
@@ -167,21 +179,21 @@ class WordsComparator
 
     private static function getRelationsOfVectors($orderedVector, $vector)
     {
-        $firstRelations = self::getRelationsOfVectorsByAxis(
+        $yRelations = self::getRelationsOfVectorsByAxis(
             $orderedVector['y_start'],
             $orderedVector['y_end'],
             $vector['y_start'],
             $vector['y_end']
         );
 
-        $secondRelations = self::getRelationsOfVectorsByAxis(
+        $xRelations = self::getRelationsOfVectorsByAxis(
             $orderedVector['x_start'],
             $orderedVector['x_end'],
             $vector['x_start'],
             $vector['x_end']
         );
 
-        return ($firstRelations['type'] > $secondRelations['type']) ? $firstRelations : $secondRelations;
+        return ($yRelations['type'] > $xRelations['type']) ? $yRelations : $xRelations;
     }
 
     private static function getRelationsOfVectorsByAxis($orderedVectorStart, $orderedVectorEnd,
@@ -193,8 +205,8 @@ class WordsComparator
             'cut_from_right' => 0
         ];
 
-        $pointIsInside = function($firstPoint, $secondPoint, $testPoint) {
-            return ($testPoint >= $firstPoint && $testPoint <= $secondPoint);
+        $pointIsInside = function($yPoint, $xPoint, $testPoint) {
+            return ($testPoint >= $yPoint && $testPoint <= $xPoint);
         };
 
         $vectorStartIsInside = $pointIsInside($orderedVectorStart, $orderedVectorEnd, $vectorStart);
