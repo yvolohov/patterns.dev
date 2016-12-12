@@ -29,38 +29,6 @@ class WordsComparator
         return self::buildTemplate($yString, $xString, $orderedVectors, $simpleView);
     }
 
-    private static function buildTemplate($yString, $xString, $orderedVectors, $simpleView)
-    {
-        $result = '';
-        $previousVector = $currentVector = Null;
-        $maximalValue = count($orderedVectors) + 1;
-
-        for ($counter = 1; $counter <= $maximalValue; $counter++) {
-            $previousVector = $currentVector;
-            $currentVector = ($counter < $maximalValue) ? $orderedVectors[$counter - 1] : Null;
-            $spaceBetweenVectors = self::getSpaceBetweenVectors(
-                $yString,
-                $xString,
-                $previousVector,
-                $currentVector,
-                $simpleView
-            );
-            $result .= $spaceBetweenVectors;
-
-            if ($counter < $maximalValue) {
-                $result .= substr($yString, $currentVector['y_start'], $currentVector['length']);
-            }
-        }
-
-        return $result;
-    }
-
-    private static function getSpaceBetweenVectors($yString, $xString, $previousVector,
-                                                   $currentVector, $simpleView)
-    {
-        return '*';
-    }
-
     private static function getVectors($yString, $xString)
     {
         $yLength = mb_strlen($yString, self::ENCODING);
@@ -225,5 +193,47 @@ class WordsComparator
         }
 
         return $relations;
+    }
+
+    private static function buildTemplate($yString, $xString, $orderedVectors, $simpleView)
+    {
+        $result = '';
+        $previousVector = $currentVector = Null;
+        $maximalValue = count($orderedVectors) + 1;
+
+        for ($counter = 1; $counter <= $maximalValue; $counter++) {
+            $previousVector = $currentVector;
+            $currentVector = ($counter < $maximalValue) ? $orderedVectors[$counter - 1] : Null;
+            $spaceBetweenVectors = self::getSpaceBetweenVectors(
+                $yString,
+                $xString,
+                $previousVector,
+                $currentVector,
+                $simpleView
+            );
+            $result .= $spaceBetweenVectors;
+
+            if ($counter < $maximalValue) {
+                $result .= substr($yString, $currentVector['y_start'], $currentVector['length']);
+            }
+        }
+
+        return $result;
+    }
+
+    private static function getSpaceBetweenVectors($yString, $xString, $previousVector,
+                                                   $currentVector, $simpleView)
+    {
+        if ($previousVector !== Null && $currentVector !== Null) {
+
+        }
+        elseif ($previousVector !== Null) {
+
+        }
+        elseif ($currentVector !== Null) {
+
+        }
+
+        return '*';
     }
 }
