@@ -1,12 +1,14 @@
 <?php
 
-require_once 'WordsComparator.php';
+require_once 'SearchEngine.php';
 
-$result = WordsComparator::compare('volokhov.yaroslav@pdffiller.team', 'yvolohov@gmail.com', false);
-echo $result, PHP_EOL;
+$host = '127.0.0.1';
+$dbname = 'feldata';
+$user = 'root';
+$password = '';
+$charset = 'utf8';
+$dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";
 
-
-// 'yvolohov@gmail.com', 'volokhov.yaroslav@pdffiller.team'
-
-// *volo*hov*a*il*.*m
-// [y|]volo[|k]hov[@gm|.yarosl]a[|v@pdff]il[|ler].[co|tea]m
+$searchEngine = new SearchEngine($dsn, $user, $password);
+$result = $searchEngine->search('cure');
+print_r($result) . PHP_EOL;
