@@ -118,20 +118,8 @@ class WordsComparator
 
                 /* если нет ни поглощения ни пересечения, вектор может быть добавлен в упорядоченные */
                 else {
-                    $orderedVector = $orderedVectors[$orderedVectorsIndex];
-                    $vector = $vectors[$vectorsIndex];
-
-                    /* но при этом он должен и по оси X и по оси Y находится
-                     * с одной стороны от упорядоченного вектора (т.е. впереди либо сзади) */
-                    if ((($vector['x_start'] > $orderedVector['x_start'])
-                        && ($vector['y_start'] < $orderedVector['y_start']))
-                        || (($vector['x_start'] < $orderedVector['x_start'])
-                        && ($vector['y_start'] > $orderedVector['y_start'])))
-                    {
-                        /* в противном случае вектор вытесняется как неправильный */
-                        $forcedOut = true;
-                    }
-
+                    $incorrect = self::vectorIsIncorrect($orderedVectors[$orderedVectorsIndex], $vectors[$vectorsIndex]);
+                    $forcedOut = ($incorrect) ? true : $forcedOut;
                 }
             }
 
@@ -143,6 +131,12 @@ class WordsComparator
         }
 
         return $orderedVectors;
+    }
+
+    private static function vectorIsIncorrect($orderedVector, $vector)
+    {
+        return ((($vector['x_start'] > $orderedVector['x_start']) && ($vector['y_start'] < $orderedVector['y_start']))
+            || (($vector['x_start'] < $orderedVector['x_start']) && ($vector['y_start'] > $orderedVector['y_start'])));
     }
 
     private static function getRelationsOfVectors($orderedVector, $vector)
