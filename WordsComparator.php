@@ -225,12 +225,18 @@ class WordsComparator
                                                    $currentVector, $simpleView)
     {
         if ($previousVector !== Null && $currentVector !== Null) {
-
-        }
-        elseif ($previousVector !== Null) {
-
+            $spaceXStart = $previousVector['x_end'] + 1;
+            $spaceXEnd = $currentVector['x_start'] - 1;
+            $spaceYStart = $previousVector['y_end'] + 1;
+            $spaceYEnd = $currentVector['y_start'] - 1;
         }
         elseif ($currentVector !== Null) {
+            $spaceXStart = 0;
+            $spaceXEnd = $currentVector['x_start'] - 1;
+            $spaceYStart = 0;
+            $spaceYEnd = $currentVector['y_start'] - 1;
+        }
+        elseif ($previousVector !== Null) {
 
         }
 
