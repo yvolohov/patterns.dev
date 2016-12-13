@@ -2,7 +2,7 @@
 
 require_once 'WordsComparator.php';
 
-$result = WordsComparator::compare('volokhov.yaroslav@pdffiller.team', 'yvolohov@gmail.com');
+$result = WordsComparator::compare('volokhov.yaroslav@pdffiller.team', 'yvolohov@gmail.com', false);
 echo $result, PHP_EOL;
 
 

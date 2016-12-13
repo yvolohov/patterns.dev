@@ -1,7 +1,5 @@
 <?php
 
-require_once 'WordsComparatorTester.php';
-
 class WordsComparator
 {
     const ENCODING = 'utf-8';
@@ -21,9 +19,6 @@ class WordsComparator
         // Сортируем упорядоченные векторы в порядке их расположения
         $sorter = function($a, $b) {return $a['y_start'] - $b['y_start'];};
         usort($orderedVectors, $sorter);
-
-        // Тестируем
-        WordsComparatorTester::test($xString, $yString, $orderedVectors);
 
         // Строим и возвращаем шаблон
         return self::buildTemplate($yString, $xString, $orderedVectors, $simpleView);
@@ -208,7 +203,7 @@ class WordsComparator
             $result .= $spaceBetweenVectors;
 
             if ($counter < $maximalValue) {
-                $result .= substr($yString, $currentVector['y_start'], $currentVector['length']);
+                $result .= mb_substr($yString, $currentVector['y_start'], $currentVector['length'], self::ENCODING);
             }
         }
 
@@ -225,7 +220,13 @@ class WordsComparator
 
         $spaceXLength = $spaceXEnd - $spaceXStart + 1;
         $spaceYLength = $spaceYEnd - $spaceYStart + 1;
+        $contentX = mb_substr($xString, $spaceXStart, $spaceXLength, self::ENCODING);
+        $contentY = mb_substr($yString, $spaceYStart, $spaceYLength, self::ENCODING);
 
-        return '*';
+        if (empty($contentX) && empty($contentY)) {
+            return '';
+        }
+
+        return (!$simpleView) ? "[{$contentX}|{$contentY}]" : '*';
     }
 }
