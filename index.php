@@ -1,14 +1,8 @@
 <?php
 
+require_once 'settings.php';
 require_once 'SearchEngine.php';
 
-$host = '127.0.0.1';
-$dbname = 'feldata';
-$user = 'root';
-$password = '';
-$charset = 'utf8';
-$dsn = "mysql:host={$host};dbname={$dbname};charset={$charset}";
-
 $searchEngine = new SearchEngine($dsn, $user, $password);
-$result = $searchEngine->search('cure');
+$result = $searchEngine->search('president');
 print_r($result) . PHP_EOL;
