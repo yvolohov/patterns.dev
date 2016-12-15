@@ -5,7 +5,7 @@ require_once 'WordsComparator.php';
 class SearchEngine
 {
     private $pdo = null;
-    private $searchResult = [];
+    private $buffer = [];
 
     public function __construct($dsn, $username='', $password='')
     {
@@ -17,39 +17,8 @@ class SearchEngine
         }
     }
 
-    private function pushWord($wordBundle)
-    {
-        $length = count($this->searchResult);
-
-        if ($length < 10) {
-            $this->searchResult[] = $wordBundle;
-        }
-        else {
-            $bundle = $this->searchResult[9];
-            $result = $this->compareBundlesOne($wordBundle, $bundle);
-
-            if ($result) {
-                $this->searchResult[9] = $wordBundle;
-            }
-        }
-
-        /* дальше проталкиваем последнюю связку по цепочке вверх */
-    }
-
-    private function compareBundlesOne($wordBundle, $bundle)
-    {
-        return (($wordBundle['symbols'] > $bundle['symbols'])
-            || ($wordBundle['symbols'] == $bundle['symbols'] && $wordBundle['gaps'] < $bundle['gaps']));
-    }
-
-    private function compareBundlesTwo($wordBundle, $bundle)
-    {
-        return (($wordBundle['symbols'] - $wordBundle['gaps']) > ($bundle['symbols'] - $bundle('gaps')));
-    }
-
     public function search($word)
     {
-        $result = ['symbols' => 0, 'gaps' => PHP_INT_MAX, 'word' => '', 'pattern' => ''];
         $stmt = $this->pdo->prepare('SELECT LOWER(Word) Word FROM Words WHERE LanguageID = :language_id ORDER BY Word');
         $stmt->execute([':language_id' => 16]);
 
@@ -66,17 +35,68 @@ class SearchEngine
             $countOfSymbols = mb_strlen($symbols, WordsComparator::ENCODING);
             $countOfGaps = $totalCount - $countOfSymbols;
 
-            if (($countOfSymbols > $result['symbols'])
-                || ($countOfSymbols == $result['symbols']
-                    && $countOfGaps < $result['gaps'])) {
-                $result['word'] = $currentWord;
-                $result['pattern'] = $pattern;
-                $result['symbols'] = $countOfSymbols;
-                $result['gaps'] = $countOfGaps;
+            $wordBundle = [];
+            $wordBundle['word'] = $currentWord;
+            $wordBundle['pattern'] = $pattern;
+            $wordBundle['symbols'] = $countOfSymbols;
+            $wordBundle['gaps'] = $countOfGaps;
+            $this->pushWord($wordBundle);
+        }
+
+        return $this->buffer;
+    }
+
+    private function pushWord($wordBundle)
+    {
+        $bufferLength = count($this->buffer);
+
+        if ($bufferLength < 10) {
+            $this->buffer[] = $wordBundle;
+        }
+        else {
+            $bundle = $this->buffer[9];
+            $result = $this->compareBundles($wordBundle, $bundle);
+
+            if ($result) {
+                $this->buffer[9] = $wordBundle;
+            }
+            else {
+                return;
             }
         }
 
-        return $result;
+        /* -1 because index, -1 because we need to get previous and next elements */
+        $maxIndex = count($this->buffer) - 2;
+
+        for ($index = $maxIndex; $index >= 0; $index--) {
+            $currentBundle = $this->buffer[$index];
+            $previousBundle = $this->buffer[$index + 1];
+            $result = $this->compareBundles($previousBundle, $currentBundle);
+
+            if ($result) {
+                $this->buffer[$index + 1] = $currentBundle;
+                $this->buffer[$index] = $previousBundle;
+            }
+            else {
+                return;
+            }
+        }
+    }
+
+    private function compareBundles($wordBundle, $bundle)
+    {
+        return $this->compareBundlesTwo($wordBundle, $bundle);
+    }
+
+    private function compareBundlesOne($wordBundle, $bundle)
+    {
+        return (($wordBundle['symbols'] > $bundle['symbols'])
+            || ($wordBundle['symbols'] == $bundle['symbols'] && $wordBundle['gaps'] < $bundle['gaps']));
+    }
+
+    private function compareBundlesTwo($wordBundle, $bundle)
+    {
+        return (($wordBundle['symbols'] - $wordBundle['gaps']) > ($bundle['symbols'] - $bundle['gaps']));
     }
 
     public function __destruct()
