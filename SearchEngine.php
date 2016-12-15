@@ -5,6 +5,7 @@ require_once 'WordsComparator.php';
 class SearchEngine
 {
     private $pdo = null;
+    private $searchResult = [];
 
     public function __construct($dsn, $username='', $password='')
     {
@@ -14,6 +15,36 @@ class SearchEngine
         catch (\Exception $e) {
             exit($e->getMessage() . PHP_EOL);
         }
+    }
+
+    private function pushWord($wordBundle)
+    {
+        $length = count($this->searchResult);
+
+        if ($length < 10) {
+            $this->searchResult[] = $wordBundle;
+        }
+        else {
+            $bundle = $this->searchResult[9];
+            $result = $this->compareBundlesOne($wordBundle, $bundle);
+
+            if ($result) {
+                $this->searchResult[9] = $wordBundle;
+            }
+        }
+
+        /* дальше проталкиваем последнюю связку по цепочке вверх */
+    }
+
+    private function compareBundlesOne($wordBundle, $bundle)
+    {
+        return (($wordBundle['symbols'] > $bundle['symbols'])
+            || ($wordBundle['symbols'] == $bundle['symbols'] && $wordBundle['gaps'] < $bundle['gaps']));
+    }
+
+    private function compareBundlesTwo($wordBundle, $bundle)
+    {
+        return (($wordBundle['symbols'] - $wordBundle['gaps']) > ($bundle['symbols'] - $bundle('gaps')));
     }
 
     public function search($word)
